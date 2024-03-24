@@ -1,0 +1,13 @@
+{
+  "hello": "Hello",
+  "welcome": "Welcome to our application!",
+  "goodbye": "Goodbye",
+  "thankyou": "Thank you for using our application!",
+  "button": {
+        "submit": "Submit",
+        "reset": "Reset",
+        "continue": "Continue",
+        "confirm": "Confirm",
+        "cancel": "Cancel"
+    }
+}
