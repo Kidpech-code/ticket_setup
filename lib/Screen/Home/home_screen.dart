@@ -9,44 +9,55 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<CatalogViewModel>(
-      builder: (context, model, child) {
+      builder: (context, catalogVM, child) {
+        if (catalogVM.isLoading) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Catalog'),
+            title: const Text('Ticket Setup'),
           ),
           body: GridView.builder(
-            padding: const EdgeInsets.all(4),
+            padding: const EdgeInsets.all(8),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               crossAxisSpacing: 4,
               mainAxisSpacing: 4,
             ),
-            itemCount: model.catalogList.length,
+            itemCount: catalogVM.catalogList.length,
             itemBuilder: (context, index) {
-              var item = model.catalogList[index];
+              var item = catalogVM.catalogList[index];
               return Card(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(item.title),
-                    Text('\$${item.price}'),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.remove),
-                          onPressed: () => Provider.of<CatalogViewModel>(context, listen: false).removeItem(item.id),
-                        ),
-                        Consumer<CatalogViewModel>(
-                          builder: (context, model, child) {
-                            return Text('${model.getQuantity(item.id)}');
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.add),
-                          onPressed: () => Provider.of<CatalogViewModel>(context, listen: false).addItem(item.id),
-                        ),
-                      ],
+                    const Text("Image here"),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        children: [
+                          Text(item.title),
+                          Text('\$${item.price}'),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              catalogVM.iconDeletionAndAddition(context, item.id, false),
+                              const Spacer(),
+                              Text(
+                                '${catalogVM.getQuantity(item.id)}',
+                                style: Theme.of(context).textTheme.bodyLarge,
+                              ),
+                              const Spacer(),
+                              catalogVM.iconDeletionAndAddition(context, item.id, true),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -59,7 +70,7 @@ class HomeScreen extends StatelessWidget {
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    Provider.of<CatalogViewModel>(context, listen: false).clearCart();
+                    catalogVM.clearCart();
                   },
                   child: const Text('Clear Cart'),
                 ),
@@ -70,53 +81,49 @@ class HomeScreen extends StatelessWidget {
                     textStyle: Theme.of(context).textTheme.labelLarge,
                   ),
                   onPressed: () {
-                    Provider.of<CatalogViewModel>(context, listen: false).nToCartScreen(context);
+                    catalogVM.navigateToCartScreen(context);
                   },
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text('Checkout'),
+                      const Text('Cart'),
                       const SizedBox(width: 8),
-                      Consumer<CatalogViewModel>(
-                        builder: (context, model, child) {
-                          return Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Stack(
+                            alignment: Alignment.center,
                             children: [
-                              Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.shopping_cart,
-                                  ),
-                                  if (model.getTotalItems() > 0)
-                                    Positioned(
-                                      right: 1,
-                                      top: 1,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(2),
-                                        decoration: BoxDecoration(
-                                          color: Colors.red,
-                                          borderRadius: BorderRadius.circular(6),
-                                        ),
-                                        constraints: const BoxConstraints(
-                                          minWidth: 14,
-                                          minHeight: 14,
-                                        ),
-                                        child: Text(
-                                          '${model.getTotalItems()}',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 8,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                    ),
-                                ],
+                              const Icon(
+                                Icons.shopping_cart,
                               ),
+                              if (catalogVM.getTotalItems() > 0)
+                                Positioned(
+                                  right: 1,
+                                  top: 1,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 14,
+                                      minHeight: 14,
+                                    ),
+                                    child: Text(
+                                      '${catalogVM.getTotalItems()}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 8,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
                             ],
-                          );
-                        },
+                          ),
+                        ],
                       ),
                     ],
                   ),

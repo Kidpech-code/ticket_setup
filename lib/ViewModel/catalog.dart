@@ -3,11 +3,20 @@ import 'package:hive/hive.dart';
 
 import '../Model/catalog_model.dart';
 import '../Screen/Home/cart_screen.dart';
+import '../Unity/button_style.dart';
 
 class CatalogViewModel with ChangeNotifier {
   final Box cartBox = Hive.box('cartBox');
-
   CatalogModel? catalogModel;
+
+  bool _isLoading = false;
+
+  bool get isLoading => _isLoading;
+
+  set isLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
 
   List<CatalogModel> catalogList = [
     CatalogModel(
@@ -68,35 +77,57 @@ class CatalogViewModel with ChangeNotifier {
     ),
   ];
 
-  // วิธีการเรียกใช้งาน catalogList จากหน้าอื่น
-  // final catalogList = Provider.of<CatalogViewModel>(context).catalogList;
-
-  void nToCartScreen(BuildContext context) {
-    if (cartBox.isNotEmpty) Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CartScreen()));
+  void navigateToCartScreen(BuildContext context) async {
+    isLoading = true;
+    try {
+      if (cartBox.isNotEmpty) {
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CartScreen(), fullscreenDialog: true));
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      isLoading = false;
+    }
   }
 
-  void addItem(int id) {
-    cartBox.put(id, (cartBox.get(id) ?? 0) + 1);
-    notifyListeners();
+  void addItem(int id) async {
+    isLoading = true;
+    try {
+      cartBox.put(id, (cartBox.get(id) as int? ?? 0) + 1);
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      isLoading = false;
+    }
   }
 
   void removeItem(int id) {
-    final currentQuantity = cartBox.get(id) ?? 0;
-    if (currentQuantity > 0) {
-      cartBox.put(id, currentQuantity - 1);
+    isLoading = true;
+    try {
+      final currentQuantity = cartBox.get(id) as num? ?? 0;
+      if (currentQuantity > 0) {
+        cartBox.put(id, currentQuantity - 1);
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      isLoading = false;
     }
-    notifyListeners();
   }
 
   int getQuantity(int id) {
-    return cartBox.get(id) ?? 0;
+    if (cartBox.containsKey(id)) {
+      return cartBox.get(id) as int? ?? 0;
+    } else {
+      return 0;
+    }
   }
 
   int getTotalItems() {
     int total = 0;
-    for (int key in cartBox.keys) {
-      var quantity = cartBox.get(key) ?? 0;
-      total += quantity is int ? quantity : 0;
+    for (var key in cartBox.keys) {
+      var quantity = cartBox.get(key) as int? ?? 0;
+      total += quantity;
     }
     return total;
   }
@@ -104,94 +135,107 @@ class CatalogViewModel with ChangeNotifier {
   Map<int, int> getCartItems() {
     Map<int, int> items = {};
     for (var key in cartBox.keys) {
-      final quantity = cartBox.get(key);
-      if (quantity > 0) {
-        items[key] = quantity;
+      final quantity = cartBox.get(key) as int?;
+      if (quantity != null && quantity > 0) {
+        items[key as int] = quantity;
       }
     }
     return items;
   }
 
-  void addItemCart(int id) {
-    cartBox.put(id, (cartBox.get(id) ?? 0) + 1);
-    notifyListeners();
-  }
-
-  void removeItemCart(int id) {
-    final currentQuantity = cartBox.get(id) ?? 0;
+  void removeItemFromCart(int id) {
+    isLoading = true;
     try {
+      final currentQuantity = cartBox.get(id) as int? ?? 0;
       if (currentQuantity > 1) {
         cartBox.put(id, currentQuantity - 1);
-      } else {
+      } else if (currentQuantity == 1) {
         cartBox.delete(id);
       }
     } catch (e) {
       debugPrint(e.toString());
+    } finally {
+      isLoading = false;
     }
-
-    notifyListeners();
   }
 
   void removeItemCompletely(int id) {
+    isLoading = true;
     try {
       cartBox.delete(id);
     } catch (e) {
       debugPrint(e.toString());
+    } finally {
+      isLoading = false;
     }
-    notifyListeners();
   }
 
   void clearCart() {
+    isLoading = true;
     try {
-      cartBox.clear();
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-    notifyListeners();
-  }
-
-  void clearCartAndPop(BuildContext context) {
-    try {
-      cartBox.clear().then((value) {
-        if (cartBox.isEmpty) {
-          Navigator.of(context).pop();
-        } else {
-          clearCartAndPop(context);
-        }
+      getCartItems().forEach((key, value) {
+        cartBox.delete(key);
       });
     } catch (e) {
       debugPrint(e.toString());
+    } finally {
+      isLoading = false;
     }
-    notifyListeners();
   }
 
-  double calculateTotalPrice() {
-    double totalPrice = 0.0;
-    Map<int, int> itemQuantities = getCartItems(); // Assuming this method returns a map of item IDs to quantities
-    for (var entry in itemQuantities.entries) {
-      var itemId = entry.key;
-      var quantity = entry.value;
-      var item = catalogList.firstWhere((item) => item.id == itemId, orElse: () => null!);
-      if (item != null) {
-        totalPrice += item.price * quantity;
-      }
+  void clearCartAndPop(BuildContext context) {
+    isLoading = true;
+    try {
+      getCartItems().forEach((key, value) {
+        cartBox.delete(key);
+        return;
+      });
+      Navigator.of(context).pop();
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  num calculateTotalPrice() {
+    num totalPrice = 0.0;
+    Map<int, int> itemQuantities = getCartItems();
+    for (MapEntry<int, int> entry in itemQuantities.entries) {
+      CatalogModel item = catalogList.firstWhere((item) => item.id == entry.key, orElse: () => null!);
+      totalPrice += item.price * entry.value;
     }
     return totalPrice;
   }
 
   String getCartSummary() {
     Map<int, int> itemQuantities = getCartItems();
-    List<String> summaries = [];
-
-    for (var entry in itemQuantities.entries) {
-      var itemId = entry.key;
-      var quantity = entry.value;
-      var item = catalogList.firstWhere((item) => item.id == itemId, orElse: () => null!);
-      if (item != null) {
-        summaries.add("${item.title}: $quantity  \$${item.price * quantity}");
-      }
-    }
-
+    List<String> summaries = itemQuantities.entries.map((entry) {
+      var item = catalogList.firstWhere((item) => item.id == entry.key, orElse: () => null!);
+      return "${item.title}: ${entry.value} item ${item.price * entry.value} \$";
+    }).toList();
     return summaries.join('\n');
+  }
+
+  Widget iconDeletionAndAddition(BuildContext context, int id, bool isAddition) {
+    return IconDeletionAndAddition(
+      style: isAddition
+          ? ButtonStyle(
+              backgroundColor: MaterialStateProperty.all(Theme.of(context).colorScheme.primary),
+              foregroundColor: MaterialStateProperty.all(Theme.of(context).colorScheme.onPrimary),
+            )
+          : getQuantity(id) == 0
+              ? null
+              : ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(Theme.of(context).colorScheme.secondary),
+                  foregroundColor: MaterialStateProperty.all(Theme.of(context).colorScheme.onSecondary),
+                ),
+      isAddition: isAddition,
+      ontap: isAddition
+          ? () => addItem(id)
+          : getQuantity(id) == 0
+              ? null
+              : () => removeItem(id),
+    );
   }
 }

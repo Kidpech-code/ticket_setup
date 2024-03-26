@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:ticket_setup/Screen/Home/home_screen.dart';
 
 import '../../Config/router.dart';
 import '../../Config/text_theme.dart';
@@ -8,7 +9,6 @@ import '../../Config/theme_data.dart';
 import '../../ViewModel/lang.dart';
 import '../../ViewModel/navigation.dart';
 import '../../ViewModel/theme.dart';
-import '../Setting/setting_screen.dart';
 
 class App extends StatelessWidget {
   final NavigationService navigationService;
@@ -17,9 +17,8 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    return Consumer<LocaleProvider>(
-      builder: (context, localeProvider, child) {
+    return Consumer2<LocaleProvider, ThemeProvider>(
+      builder: (context, localeProvider, themeProvider, child) {
         if (!localeProvider.isLocaleLoaded) {
           return MaterialApp(home: Container());
         }
@@ -61,7 +60,7 @@ class App extends StatelessWidget {
           ],
           navigatorKey: navigationService.navigatorKey,
           onGenerateRoute: AppRouter.generateRoute,
-          home: const SettingApp(),
+          home: const HomeScreen(),
         );
       },
     );

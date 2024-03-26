@@ -18,6 +18,11 @@ class CartScreen extends StatelessWidget {
           if (cartItems.isEmpty) {
             return const Center(child: Text('Your cart is empty'));
           }
+
+          if (model.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
           return ListView.builder(
             itemCount: cartItems.length,
             itemBuilder: (context, index) {
@@ -46,12 +51,12 @@ class CartScreen extends StatelessWidget {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.remove),
-                        onPressed: () => model.removeItemCart(catalogItem.id),
+                        onPressed: () => model.removeItem(catalogItem.id),
                       ),
                       Text('$itemQuantity'),
                       IconButton(
                         icon: const Icon(Icons.add),
-                        onPressed: () => model.addItemCart(catalogItem.id),
+                        onPressed: () => model.addItem(catalogItem.id),
                       ),
                     ],
                   ),

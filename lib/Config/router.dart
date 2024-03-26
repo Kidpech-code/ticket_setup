@@ -8,8 +8,6 @@ class AppRouter {
     switch (settings.name) {
       case '/home':
         return MaterialPageRoute(builder: (_) => const HomeScreen());
-
-      
       case '/setting':
         return MaterialPageRoute(builder: (_) => const SettingApp());
       default:
