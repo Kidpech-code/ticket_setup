@@ -2,9 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../ViewModel/catalog.dart';
+import 'cart_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late CatalogViewModel viewModel;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    viewModel = Provider.of<CatalogViewModel>(context);
+    viewModel.navigateToCartScreenCallback = () {
+      Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CartScreen(), fullscreenDialog: true));
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,9 +97,7 @@ class HomeScreen extends StatelessWidget {
                     foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     textStyle: Theme.of(context).textTheme.labelLarge,
                   ),
-                  onPressed: () {
-                    catalogVM.navigateToCartScreen(context);
-                  },
+                  onPressed: () => viewModel.navigateToCartScreen(),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
