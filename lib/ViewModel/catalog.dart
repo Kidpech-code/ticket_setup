@@ -77,16 +77,11 @@ class CatalogViewModel with ChangeNotifier {
     ),
   ];
 
-  void navigateToCartScreen(BuildContext context) async {
-    isLoading = true;
-    try {
-      if (cartBox.isNotEmpty) {
-        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CartScreen(), fullscreenDialog: true));
-      }
-    } catch (e) {
-      debugPrint(e.toString());
-    } finally {
-      isLoading = false;
+  VoidCallback? navigateToCartScreenCallback;
+
+  void navigateToCartScreen() {
+    if (cartBox.isNotEmpty && navigateToCartScreenCallback != null) {
+      navigateToCartScreenCallback!();
     }
   }
 
