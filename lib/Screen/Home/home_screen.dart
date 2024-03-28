@@ -15,12 +15,14 @@ class _HomeScreenState extends State<HomeScreen> {
   late CatalogViewModel viewModel;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    viewModel = Provider.of<CatalogViewModel>(context);
-    viewModel.navigateToCartScreenCallback = () {
-      Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CartScreen(), fullscreenDialog: true));
-    };
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      viewModel = Provider.of<CatalogViewModel>(context, listen: false);
+      viewModel.navigateToCartScreenCallback = () {
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CartScreen(), fullscreenDialog: true));
+      };
+    });
   }
 
   @override
